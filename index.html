@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f0f13">
+<title>My Tracker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  :root {
+    --bg:#0f0f13;--surface:#1a1a22;--surface2:#22222e;--border:rgba(255,255,255,0.07);
+    --text:#f0f0f5;--text2:#9090a8;--text3:#55556a;
+    --green:#1DB87A;--green-dim:rgba(29,184,122,0.15);
+    --blue:#4A9EFF;--blue-dim:rgba(74,158,255,0.15);
+    --purple:#9B8FFF;--purple-dim:rgba(155,143,255,0.15);
+    --orange:#FF8C42;--orange-dim:rgba(255,140,66,0.15);
+    --radius:12px;--radius-sm:8px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:40px}
+
+  .app-header{padding:52px 20px 0;margin-bottom:16px}
+  .app-header h1{font-size:26px;font-weight:700;letter-spacing:-0.5px}
+  .app-header .date{font-size:13px;color:var(--text2);margin-top:3px}
+
+  /* DATE NAV */
+  .date-nav{display:flex;align-items:center;gap:0;margin:0 16px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
+  .date-nav-btn{width:44px;height:44px;background:transparent;border:none;color:var(--text2);font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background 0.15s}
+  .date-nav-btn:hover{background:var(--surface2)}
+  .date-nav-btn:disabled{opacity:0.3;cursor:default}
+  .date-nav-center{flex:1;text-align:center;padding:0 4px}
+  .date-nav-label{font-size:14px;font-weight:600;color:var(--text)}
+  .date-nav-sub{font-size:11px;color:var(--text3);margin-top:1px}
+  .today-badge{display:inline-block;font-size:10px;font-weight:700;background:var(--green-dim);color:var(--green);padding:2px 7px;border-radius:99px;margin-top:3px}
+
+  /* XP CARD */
+  .xp-card{margin:0 16px 16px;background:linear-gradient(135deg,#1a1030 0%,#0e1a2e 100%);border:1px solid rgba(155,143,255,0.2);border-radius:var(--radius);padding:16px}
+  .xp-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .level-row{display:flex;align-items:center;gap:12px}
+  .level-badge{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0;box-shadow:0 0 20px rgba(155,143,255,0.3)}
+  .level-name{font-size:16px;font-weight:600}
+  .level-sub{font-size:12px;color:var(--text2);margin-top:2px}
+  .xp-right{text-align:right}
+  .xp-total{font-size:22px;font-weight:700;color:var(--purple)}
+  .xp-label{font-size:11px;color:var(--text3)}
+  .xp-bar-track{height:6px;background:rgba(255,255,255,0.08);border-radius:99px;overflow:hidden}
+  .xp-bar-fill{height:6px;background:linear-gradient(90deg,var(--purple),var(--blue));border-radius:99px;transition:width 0.6s cubic-bezier(0.4,0,0.2,1)}
+  .xp-bar-meta{display:flex;justify-content:space-between;margin-top:5px}
+  .xp-bar-meta span{font-size:11px;color:var(--text3)}
+
+  .stats-row{display:flex;gap:8px;margin:0 16px 16px}
+  .stat-card{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 8px;text-align:center}
+  .stat-num{font-size:20px;font-weight:700}
+  .stat-lbl{font-size:11px;color:var(--text2);margin-top:3px}
+  .stat-streak .stat-num{color:var(--orange)}
+  .stat-today .stat-num{color:var(--green)}
+  .stat-weekly .stat-num{color:var(--blue)}
+  .stat-wxp .stat-num{color:var(--purple)}
+
+  .week-row{display:flex;gap:6px;margin:0 16px 16px}
+  .week-day{flex:1;text-align:center;font-size:11px;font-weight:600;color:var(--text3);padding:8px 2px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface)}
+  .week-day.today{color:var(--green);border-color:rgba(29,184,122,0.4);background:var(--green-dim)}
+  .week-day.selected{color:var(--purple);border-color:rgba(155,143,255,0.4);background:var(--purple-dim)}
+  .week-day.has-gym{color:var(--text2);border-color:rgba(155,143,255,0.2)}
+
+  /* PAST DAY BANNER */
+  .past-banner{margin:0 16px 14px;padding:10px 14px;background:rgba(255,140,66,0.1);border:1px solid rgba(255,140,66,0.25);border-radius:var(--radius-sm);font-size:13px;color:var(--orange);display:none}
+
+  .tabs{display:flex;gap:6px;margin:0 16px 18px;background:var(--surface);padding:4px;border-radius:var(--radius-sm)}
+  .tab{flex:1;padding:9px;border:none;background:transparent;font-size:14px;font-weight:500;color:var(--text2);border-radius:6px;cursor:pointer;transition:all 0.15s;font-family:inherit}
+  .tab.active{background:var(--surface2);color:var(--text);font-weight:600}
+
+  .section{margin:0 16px 20px}
+  .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3)}
+  .section-prog{font-size:12px;color:var(--text3)}
+  .prog-track{height:2px;background:var(--border);border-radius:99px;margin-bottom:10px}
+  .prog-fill{height:2px;border-radius:99px;transition:width 0.4s ease}
+  .prog-health{background:var(--green)}.prog-habits{background:var(--purple)}.prog-food{background:var(--orange)}.prog-work{background:var(--blue)}
+
+  .item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px;transition:opacity 0.2s}
+  .item.done{opacity:0.4}
+  .item.done .item-label{text-decoration:line-through;color:var(--text3)}
+  .item.not-today{opacity:0.25}
+
+  .check-btn{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--text3);background:transparent;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.15s;font-size:13px;color:#fff}
+  .check-btn:disabled{cursor:default}
+  .check-health.on{background:var(--green);border-color:var(--green)}
+  .check-habits.on{background:var(--purple);border-color:var(--purple)}
+  .check-food.on{background:var(--orange);border-color:var(--orange)}
+  .check-work.on{background:var(--blue);border-color:var(--blue)}
+  .checkmark{display:none}
+  .check-btn.on .checkmark{display:block}
+
+  .item-body{flex:1;min-width:0}
+  .item-label{font-size:14px;color:var(--text);line-height:1.3}
+  .item-note{font-size:11px;color:var(--text3);margin-top:2px}
+  .item-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+  .xp-pill{font-size:11px;font-weight:600;color:var(--purple);background:var(--purple-dim);padding:2px 8px;border-radius:99px}
+  .day-chips{display:flex;gap:2px}
+  .day-chip{font-size:10px;padding:2px 4px;border-radius:4px;font-weight:600}
+  .day-on-health{background:var(--green-dim);color:var(--green)}
+  .day-on-habits{background:var(--purple-dim);color:var(--purple)}
+  .day-on-food{background:var(--orange-dim);color:var(--orange)}
+  .day-on-work{background:var(--blue-dim);color:var(--blue)}
+  .day-off{background:rgba(255,255,255,0.04);color:var(--text3)}
+  .del-btn{background:transparent;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:2px 0 2px 4px;opacity:0;transition:opacity 0.15s;line-height:1}
+  .item:hover .del-btn,.item:active .del-btn{opacity:1}
+
+  .add-area{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin:0 16px 16px}
+  .add-title{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px}
+  .add-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  .add-row input{flex:1;min-width:140px;font-size:14px;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit}
+  .add-row input::placeholder{color:var(--text3)}
+  .add-row select{font-size:13px;padding:9px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit}
+  .day-toggle-row{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+  .day-lbl{font-size:11px;color:var(--text3);margin-right:2px}
+  .day-tog{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);font-size:10px;font-weight:700;color:var(--text3);cursor:pointer;transition:all 0.15s;font-family:inherit}
+  .day-tog.on{background:var(--green);border-color:var(--green);color:#fff}
+  .add-btn{width:100%;padding:10px;font-size:14px;font-weight:600;border-radius:var(--radius-sm);border:1px solid rgba(155,143,255,0.3);background:var(--purple-dim);color:var(--purple);cursor:pointer;font-family:inherit;transition:all 0.15s}
+
+  .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--surface2);border:1px solid rgba(155,143,255,0.3);color:var(--text);padding:10px 20px;border-radius:99px;font-size:13px;font-weight:600;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;z-index:999}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<div class="app-header">
+  <h1>My Tracker</h1>
+  <div class="date" id="date-str"></div>
+</div>
+
+<!-- DATE NAV -->
+<div class="date-nav">
+  <button class="date-nav-btn" id="prev-btn" onclick="shiftDay(-1)">‹</button>
+  <div class="date-nav-center">
+    <div class="date-nav-label" id="nav-label"></div>
+    <div id="nav-sub"></div>
+  </div>
+  <button class="date-nav-btn" id="next-btn" onclick="shiftDay(1)" disabled>›</button>
+</div>
+
+<!-- PAST BANNER -->
+<div class="past-banner" id="past-banner">📅 Viewing a past day — you can still tick things off retroactively.</div>
+
+<!-- XP CARD -->
+<div class="xp-card">
+  <div class="xp-top">
+    <div class="level-row">
+      <div class="level-badge" id="lvl-num">1</div>
+      <div>
+        <div class="level-name" id="lvl-name">Rookie</div>
+        <div class="level-sub" id="lvl-sub">Just getting started</div>
+      </div>
+    </div>
+    <div class="xp-right">
+      <div class="xp-total" id="xp-total">0 XP</div>
+      <div class="xp-label">total earned</div>
+    </div>
+  </div>
+  <div class="xp-bar-track"><div class="xp-bar-fill" id="xp-fill" style="width:0%"></div></div>
+  <div class="xp-bar-meta"><span id="xp-cur">0 XP</span><span id="xp-next">100 XP to Contender</span></div>
+</div>
+
+<!-- STATS -->
+<div class="stats-row">
+  <div class="stat-card stat-streak"><div class="stat-num" id="s-streak">0</div><div class="stat-lbl">🔥 streak</div></div>
+  <div class="stat-card stat-today"><div class="stat-num" id="s-today">0/0</div><div class="stat-lbl">today</div></div>
+  <div class="stat-card stat-weekly"><div class="stat-num" id="s-week">0/0</div><div class="stat-lbl">weekly</div></div>
+  <div class="stat-card stat-wxp"><div class="stat-num" id="s-wxp">0</div><div class="stat-lbl">week XP</div></div>
+</div>
+
+<!-- WEEK CHIPS -->
+<div class="week-row" id="week-row"></div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('daily')">Daily</button>
+  <button class="tab" onclick="switchTab('weekly')">Weekly</button>
+</div>
+
+<div id="daily-view"></div>
+<div id="weekly-view" style="display:none"></div>
+
+<script>
+const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const CAT={
+  health:{label:'Health',prog:'prog-health',check:'check-health',dayOn:'day-on-health'},
+  habits:{label:'Habits',prog:'prog-habits',check:'check-habits',dayOn:'day-on-habits'},
+  food:{label:'Food & Treats',prog:'prog-food',check:'check-food',dayOn:'day-on-food'},
+  work:{label:'Work',prog:'prog-work',check:'check-work',dayOn:'day-on-work'},
+};
+const CAT_ORDER=['health','habits','food','work'];
+const XP_MAP={d1:30,d2:10,d3:10,d4:5,w1:25,w2:20,w3:15,w4:20,w5:20,w6:15,w7:15,w8:15};
+const DEF_XP={daily:10,weekly:15};
+const LEVELS=[
+  {min:0,name:'Rookie',sub:'Just getting started'},
+  {min:100,name:'Contender',sub:'Building momentum'},
+  {min:300,name:'Consistent',sub:'Habits are forming'},
+  {min:600,name:'Disciplined',sub:'This is becoming natural'},
+  {min:1000,name:'Dedicated',sub:'Serious commitment'},
+  {min:1500,name:'Elite',sub:'Top tier habits'},
+  {min:2200,name:'Champion',sub:'Unstoppable'},
+  {min:3000,name:'Legend',sub:'Absolute machine 🏆'},
+];
+const DEFAULTS={
+  daily:[
+    {id:'d1',label:'Gym session',note:'Mon, Tue & Fri only',cat:'health',days:[1,2,5],done:false},
+    {id:'d2',label:'Take creatine',note:'',cat:'health',days:[],done:false},
+    {id:'d3',label:'Take fish oil tablets',note:'',cat:'health',days:[],done:false},
+    {id:'d4',label:'Make the bed',note:'',cat:'habits',days:[],done:false},
+  ],
+  weekly:[
+    {id:'w1',label:'5km run or Wednesday cardio class',note:'Once a week — sub one for the other',cat:'health',days:[],done:false},
+    {id:'w2',label:'At-home workout',note:'Arms, shoulders or core',cat:'health',days:[],done:false},
+    {id:'w3',label:'Do the washing',note:"Friday or Saturday so it's dry for Monday",cat:'habits',days:[],done:false},
+    {id:'w4',label:'Ring a family member',note:'',cat:'habits',days:[],done:false},
+    {id:'w5',label:'20 mins learning / research',note:'E.g. politics, history, construction…',cat:'habits',days:[],done:false},
+    {id:'w6',label:'Work-hours takeaway',note:'Once a week max during work hours',cat:'food',days:[],done:false},
+    {id:'w7',label:'Dinner takeaway with Claire',note:'Once a week max outside work hours',cat:'food',days:[],done:false},
+    {id:'w8',label:'Connoisseur ice cream',note:'One tub max — make it count 🍦',cat:'food',days:[],done:false},
+  ]
+};
+
+// viewOffset = 0 means today, -1 = yesterday, etc.
+let viewOffset = 0;
+let newDays = [];
+let toastTimer = null;
+let currentTab = 'daily';
+
+// XP & streak live in a separate store, not tied to a day
+let XPS = {streak:0,lastDate:null,totalXP:0,weekXP:0,weekKey:null};
+
+function dateForOffset(offset) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return d;
+}
+function keyForOffset(offset) {
+  const d = dateForOffset(offset);
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+function todayKey() { return keyForOffset(0); }
+function weekKey() {
+  const d = new Date(), day = d.getDay();
+  const diff = d.getDate()-day+(day===0?-6:1);
+  const mon = new Date(new Date(d).setDate(diff));
+  return `wk-${mon.getFullYear()}-${mon.getMonth()+1}-${mon.getDate()}`;
+}
+function dowForOffset(offset) { return dateForOffset(offset).getDay(); }
+function scheduled(item, offset) {
+  const d = dowForOffset(offset !== undefined ? offset : viewOffset);
+  return !item.days || item.days.length===0 || item.days.includes(d);
+}
+function getXP(item) { return XP_MAP[item.id]||DEF_XP[item.id&&item.id[0]==='w'?'weekly':'daily']; }
+function getLevel(xp) {
+  let lv=LEVELS[0],idx=0;
+  for(let i=0;i<LEVELS.length;i++){if(xp>=LEVELS[i].min){lv=LEVELS[i];idx=i;}}
+  return {lv,idx};
+}
+
+function saveDay(offset, daily) {
+  localStorage.setItem('daily_'+keyForOffset(offset), JSON.stringify(daily));
+}
+function loadDay(offset) {
+  const k = 'daily_'+keyForOffset(offset);
+  const d = localStorage.getItem(k);
+  return d ? JSON.parse(d) : JSON.parse(JSON.stringify(DEFAULTS.daily));
+}
+function saveWeek(weekly) {
+  localStorage.setItem('weekly_'+weekKey(), JSON.stringify(weekly));
+}
+function loadWeek() {
+  const w = localStorage.getItem('weekly_'+weekKey());
+  return w ? JSON.parse(w) : JSON.parse(JSON.stringify(DEFAULTS.weekly));
+}
+function saveXPS() {
+  localStorage.setItem('xpstate', JSON.stringify(XPS));
+}
+function loadXPS() {
+  const x = localStorage.getItem('xpstate');
+  if(x) XPS = JSON.parse(x);
+  if(XPS.weekKey !== weekKey()){XPS.weekXP=0;XPS.weekKey=weekKey();}
+}
+
+// Current view state
+let viewDaily = [];
+let viewWeekly = [];
+
+function shiftDay(delta) {
+  // Save current view before shifting
+  if(currentTab==='daily') saveDay(viewOffset, viewDaily);
+  else saveWeek(viewWeekly);
+  viewOffset = Math.min(0, viewOffset + delta);
+  viewDaily = loadDay(viewOffset);
+  viewWeekly = loadWeek();
+  render();
+}
+
+function toast(msg) {
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  if(toastTimer)clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),2200);
+}
+
+function updateStreak(daily) {
+  const tk = todayKey();
+  if(viewOffset!==0) return; // only update streak when viewing today
+  const ti = daily.filter(i=>scheduled(i,0));
+  if(ti.length>0&&ti.every(i=>i.done)&&XPS.lastDate!==tk){
+    const y=new Date();y.setDate(y.getDate()-1);
+    const yk=`${y.getFullYear()}-${y.getMonth()+1}-${y.getDate()}`;
+    XPS.streak=XPS.lastDate===yk?XPS.streak+1:1;
+    XPS.lastDate=tk;
+    if(XPS.streak%7===0){const b=50;XPS.totalXP+=b;XPS.weekXP+=b;setTimeout(()=>toast(`🔥 ${XPS.streak}-day streak! +${b} bonus XP!`),2400);}
+    else if(XPS.streak%3===0){const b=20;XPS.totalXP+=b;XPS.weekXP+=b;setTimeout(()=>toast(`🔥 ${XPS.streak}-day streak! +${b} bonus XP!`),2400);}
+    saveXPS();
+  }
+}
+
+function toggle(list, id) {
+  const arr = list==='daily' ? viewDaily : viewWeekly;
+  const item = arr.find(i=>i.id===id);
+  if(!item) return;
+  if(list==='daily'&&!scheduled(item)) return;
+  const was=item.done;
+  item.done=!item.done;
+  const xp=getXP(item);
+  const prevLvl=getLevel(XPS.totalXP).idx;
+  if(!was){XPS.totalXP+=xp;XPS.weekXP+=xp;toast(`+${xp} XP`);}
+  else{XPS.totalXP=Math.max(0,XPS.totalXP-xp);XPS.weekXP=Math.max(0,XPS.weekXP-xp);}
+  const newLvl=getLevel(XPS.totalXP).idx;
+  if(newLvl>prevLvl)setTimeout(()=>toast(`⬆️ Level up! ${LEVELS[newLvl].name}!`),2400);
+  saveXPS();
+  if(list==='daily'){updateStreak(viewDaily);saveDay(viewOffset,viewDaily);}
+  else saveWeek(viewWeekly);
+  render();
+}
+
+function del(list,id){
+  if(list==='daily'){viewDaily=viewDaily.filter(i=>i.id!==id);saveDay(viewOffset,viewDaily);}
+  else{viewWeekly=viewWeekly.filter(i=>i.id!==id);saveWeek(viewWeekly);}
+  render();
+}
+
+function toggleDay(d){
+  const btn=document.getElementById('dt-'+d);
+  if(newDays.includes(d)){newDays=newDays.filter(x=>x!==d);btn.classList.remove('on');}
+  else{newDays.push(d);btn.classList.add('on');}
+}
+
+function addItem(list){
+  const inp=document.getElementById('ai-'+list);
+  const sel=document.getElementById('as-'+list);
+  const label=inp.value.trim();if(!label)return;
+  const id=list[0]+(Date.now()%1e9);
+  const newItem={id,label,note:'',cat:sel.value,days:list==='daily'?[...newDays]:[],done:false};
+  if(list==='daily'){viewDaily.push(newItem);saveDay(viewOffset,viewDaily);}
+  else{viewWeekly.push(newItem);saveWeek(viewWeekly);}
+  inp.value='';newDays=[];
+  document.querySelectorAll('.day-tog').forEach(b=>b.classList.remove('on'));
+  render();
+}
+
+function renderXP(){
+  const xp=XPS.totalXP;
+  const {lv,idx}=getLevel(xp);
+  const next=LEVELS[idx+1];
+  const lvXP=xp-lv.min;
+  const range=next?next.min-lv.min:1;
+  const pct=next?Math.min(100,Math.round(lvXP/range*100)):100;
+  document.getElementById('lvl-num').textContent=idx+1;
+  document.getElementById('lvl-name').textContent=lv.name;
+  document.getElementById('lvl-sub').textContent=lv.sub;
+  document.getElementById('xp-total').textContent=xp+' XP';
+  document.getElementById('xp-fill').style.width=pct+'%';
+  document.getElementById('xp-cur').textContent=lvXP+' / '+(next?range:'MAX')+' XP';
+  document.getElementById('xp-next').textContent=next?(next.min-xp)+' XP to '+next.name:'Max level!';
+}
+
+function renderDateNav(){
+  const d=dateForOffset(viewOffset);
+  const isToday=viewOffset===0;
+  const label=isToday?'Today':viewOffset===-1?'Yesterday':d.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'short'});
+  document.getElementById('nav-label').textContent=label;
+  const sub=document.getElementById('nav-sub');
+  if(isToday){sub.innerHTML='<span class="today-badge">TODAY</span>';}
+  else{sub.textContent=d.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'});sub.style.color='var(--text3)';sub.style.fontSize='11px';}
+  document.getElementById('next-btn').disabled=viewOffset>=0;
+  document.getElementById('prev-btn').disabled=viewOffset<=-14; // max 2 weeks back
+  document.getElementById('past-banner').style.display=isToday?'none':'block';
+  document.getElementById('date-str').textContent=new Date().toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+
+function renderWeekChips(){
+  const todayDow=dateForOffset(0).getDay();
+  const viewDow=dowForOffset(viewOffset);
+  let html='';
+  for(let i=1;i<=7;i++){
+    const d=i%7;
+    const isToday=d===todayDow;
+    const isSelected=d===viewDow&&viewOffset!==0;
+    const hasGym=viewDaily.some(it=>it.days&&it.days.includes(d));
+    let cls='week-day';
+    if(isToday&&viewOffset===0)cls+=' today';
+    else if(isSelected)cls+=' selected';
+    else if(isToday)cls+=' today';
+    else if(hasGym)cls+=' has-gym';
+    html+=`<div class="${cls}" onclick="jumpToDay(${d})">${DAYS[d]}</div>`;
+  }
+  document.getElementById('week-row').innerHTML=html;
+}
+
+function jumpToDay(targetDow){
+  const todayDow=dateForOffset(0).getDay();
+  let diff=targetDow-todayDow;
+  if(diff>0)diff-=7; // can only go back
+  shiftDay(diff-viewOffset); // absolute jump
+  // Recalc: find how many days ago that dow was
+  // Actually simpler:
+  const today=new Date();
+  const target=new Date();
+  let d=targetDow-today.getDay();
+  if(d>0)d-=7;
+  viewOffset=d;
+  viewDaily=loadDay(viewOffset);
+  render();
+}
+
+function renderSection(list,cat){
+  const arr=list==='daily'?viewDaily:viewWeekly;
+  const items=arr.filter(i=>i.cat===cat);
+  if(!items.length)return '';
+  const m=CAT[cat];
+  const visible=list==='daily'?items.filter(i=>scheduled(i)):items;
+  const done=visible.filter(i=>i.done).length;
+  const total=visible.length;
+  const pct=total?Math.round(done/total*100):0;
+  let h=`<div class="section">
+    <div class="section-head"><span class="section-title">${m.label}</span><span class="section-prog">${done}/${total}</span></div>
+    <div class="prog-track"><div class="prog-fill ${m.prog}" style="width:${pct}%"></div></div>`;
+  items.forEach(item=>{
+    const sched=list==='weekly'||scheduled(item);
+    const hasDays=item.days&&item.days.length>0;
+    const xp=getXP(item);
+    h+=`<div class="item${item.done&&sched?' done':''}${!sched?' not-today':''}">
+      <button class="check-btn ${m.check}${item.done?' on':''}" onclick="toggle('${list}','${item.id}')" ${!sched?'disabled':''}>
+        <span class="checkmark">✓</span>
+      </button>
+      <div class="item-body">
+        <div class="item-label">${item.label}</div>
+        ${item.note?`<div class="item-note">${item.note}</div>`:''}
+      </div>
+      <div class="item-right">
+        <span class="xp-pill">+${xp} XP</span>`;
+    if(hasDays){
+      h+=`<div class="day-chips">`;
+      [1,2,3,4,5,6,0].forEach(d=>{
+        const on=item.days.includes(d);
+        h+=`<span class="day-chip ${on?m.dayOn:'day-off'}">${DAYS[d]}</span>`;
+      });
+      h+=`</div>`;
+    }
+    h+=`<button class="del-btn" onclick="del('${list}','${item.id}')">×</button></div></div>`;
+  });
+  return h+'</div>';
+}
+
+function renderAddArea(list){
+  if(viewOffset!==0)return `<div style="margin:0 16px;font-size:13px;color:var(--text3);padding:8px 0">Switch to today to add new tasks.</div>`;
+  const dayRow=list==='daily'?`
+    <div class="day-toggle-row">
+      <span class="day-lbl">Specific days:</span>
+      ${[1,2,3,4,5,6,0].map(d=>`<button class="day-tog" id="dt-${d}" onclick="toggleDay(${d})">${DAYS[d]}</button>`).join('')}
+    </div>`:'';
+  return `<div class="add-area">
+    <div class="add-title">+ Add a task</div>
+    <div class="add-row">
+      <input id="ai-${list}" type="text" placeholder="Task name…" onkeydown="if(event.key==='Enter')addItem('${list}')">
+      <select id="as-${list}">
+        <option value="health">Health</option>
+        <option value="habits">Habits</option>
+        <option value="food">Food & Treats</option>
+        <option value="work">Work</option>
+      </select>
+    </div>
+    ${dayRow}
+    <button class="add-btn" onclick="addItem('${list}')">Add task</button>
+  </div>`;
+}
+
+function render(){
+  renderDateNav();
+  renderXP();
+  renderWeekChips();
+  const ti=viewDaily.filter(i=>scheduled(i,0)); // stats always show today
+  const todayData=loadDay(0);
+  const todayDone=todayData.filter(i=>scheduled(i,0)&&i.done).length;
+  const todayTotal=todayData.filter(i=>scheduled(i,0)).length;
+  document.getElementById('s-streak').textContent=XPS.streak;
+  document.getElementById('s-today').textContent=todayDone+'/'+todayTotal;
+  document.getElementById('s-week').textContent=viewWeekly.filter(i=>i.done).length+'/'+viewWeekly.length;
+  document.getElementById('s-wxp').textContent=XPS.weekXP;
+  ['daily','weekly'].forEach(list=>{
+    let html=CAT_ORDER.map(c=>renderSection(list,c)).join('');
+    html+=renderAddArea(list);
+    document.getElementById(list+'-view').innerHTML=html;
+  });
+}
+
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.textContent.toLowerCase()===tab));
+  document.getElementById('daily-view').style.display=tab==='daily'?'block':'none';
+  document.getElementById('weekly-view').style.display=tab==='weekly'?'block':'none';
+}
+
+// Init
+loadXPS();
+viewDaily=loadDay(0);
+viewWeekly=loadWeek();
+render();
+</script>
+</body>
+</html>
