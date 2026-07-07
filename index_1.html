@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f0f13">
+<title>My Tracker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  :root {
+    --bg:#0f0f13;--surface:#1a1a22;--surface2:#22222e;--border:rgba(255,255,255,0.07);
+    --text:#f0f0f5;--text2:#9090a8;--text3:#55556a;
+    --green:#1DB87A;--green-dim:rgba(29,184,122,0.15);
+    --blue:#4A9EFF;--blue-dim:rgba(74,158,255,0.15);
+    --purple:#9B8FFF;--purple-dim:rgba(155,143,255,0.15);
+    --orange:#FF8C42;--orange-dim:rgba(255,140,66,0.15);
+    --red:#FF5C5C;--red-dim:rgba(255,92,92,0.15);
+    --radius:12px;--radius-sm:8px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:40px}
+
+  .app-header{padding:52px 20px 0;margin-bottom:16px}
+  .app-header h1{font-size:26px;font-weight:700;letter-spacing:-0.5px}
+  .app-header .date{font-size:13px;color:var(--text2);margin-top:3px}
+
+  .date-nav{display:flex;align-items:center;gap:0;margin:0 16px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden}
+  .date-nav-btn{width:44px;height:44px;background:transparent;border:none;color:var(--text2);font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+  .date-nav-btn:disabled{opacity:0.3;cursor:default}
+  .date-nav-center{flex:1;text-align:center;padding:0 4px}
+  .date-nav-label{font-size:14px;font-weight:600}
+  .today-badge{display:inline-block;font-size:10px;font-weight:700;background:var(--green-dim);color:var(--green);padding:2px 7px;border-radius:99px;margin-top:3px}
+
+  .xp-card{margin:0 16px 16px;background:linear-gradient(135deg,#1a1030 0%,#0e1a2e 100%);border:1px solid rgba(155,143,255,0.2);border-radius:var(--radius);padding:16px}
+  .xp-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .level-row{display:flex;align-items:center;gap:12px}
+  .level-badge{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;flex-shrink:0;box-shadow:0 0 20px rgba(155,143,255,0.3)}
+  .level-name{font-size:16px;font-weight:600}
+  .level-sub{font-size:12px;color:var(--text2);margin-top:2px}
+  .xp-right{text-align:right}
+  .xp-total{font-size:22px;font-weight:700;color:var(--purple)}
+  .xp-label{font-size:11px;color:var(--text3)}
+  .xp-bar-track{height:6px;background:rgba(255,255,255,0.08);border-radius:99px;overflow:hidden}
+  .xp-bar-fill{height:6px;background:linear-gradient(90deg,var(--purple),var(--blue));border-radius:99px;transition:width 0.6s}
+  .xp-bar-meta{display:flex;justify-content:space-between;margin-top:5px}
+  .xp-bar-meta span{font-size:11px;color:var(--text3)}
+
+  .stats-row{display:flex;gap:8px;margin:0 16px 16px}
+  .stat-card{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 8px;text-align:center}
+  .stat-num{font-size:20px;font-weight:700}
+  .stat-lbl{font-size:11px;color:var(--text2);margin-top:3px}
+  .stat-streak .stat-num{color:var(--orange)}
+  .stat-today .stat-num{color:var(--green)}
+  .stat-weekly .stat-num{color:var(--blue)}
+  .stat-wxp .stat-num{color:var(--purple)}
+
+  .streak-note{margin:0 16px 16px;font-size:11px;color:var(--text3);text-align:center}
+  .week-streak-card{margin:0 16px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;justify-content:space-between}
+  .week-streak-left{display:flex;align-items:center;gap:10px}
+  .week-streak-icon{font-size:20px}
+  .week-streak-lbl{font-size:13px;color:var(--text2)}
+  .week-streak-sub{font-size:11px;color:var(--text3);margin-top:1px}
+  .week-streak-num{font-size:20px;font-weight:700;color:var(--blue)}
+
+  .week-row{display:flex;gap:6px;margin:0 16px 16px}
+  .week-day{flex:1;text-align:center;font-size:11px;font-weight:600;color:var(--text3);padding:8px 2px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface)}
+  .week-day.today{color:var(--green);border-color:rgba(29,184,122,0.4);background:var(--green-dim)}
+  .week-day.selected{color:var(--purple);border-color:rgba(155,143,255,0.4);background:var(--purple-dim)}
+  .week-day.has-gym{color:var(--text2);border-color:rgba(155,143,255,0.2)}
+
+  .past-banner{margin:0 16px 14px;padding:10px 14px;background:rgba(255,140,66,0.1);border:1px solid rgba(255,140,66,0.25);border-radius:var(--radius-sm);font-size:13px;color:var(--orange);display:none}
+
+  .tabs{display:flex;gap:4px;margin:0 16px 18px;background:var(--surface);padding:4px;border-radius:var(--radius-sm)}
+  .tab{flex:1;padding:9px 4px;border:none;background:transparent;font-size:13px;font-weight:500;color:var(--text2);border-radius:6px;cursor:pointer;font-family:inherit}
+  .tab.active{background:var(--surface2);color:var(--text);font-weight:600}
+
+  .section{margin:0 16px 20px}
+  .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .section-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--text3)}
+  .section-prog{font-size:12px;color:var(--text3)}
+  .prog-track{height:2px;background:var(--border);border-radius:99px;margin-bottom:10px}
+  .prog-fill{height:2px;border-radius:99px;transition:width 0.4s}
+  .prog-health{background:var(--green)}.prog-habits{background:var(--purple)}.prog-food{background:var(--orange)}.prog-work{background:var(--blue)}
+
+  .item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px}
+  .item.done{opacity:0.4}
+  .item.done .item-label{text-decoration:line-through;color:var(--text3)}
+  .item.not-today{opacity:0.25}
+
+  .check-btn{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--text3);background:transparent;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff}
+  .check-btn:disabled{cursor:default}
+  .check-health.on{background:var(--green);border-color:var(--green)}
+  .check-habits.on{background:var(--purple);border-color:var(--purple)}
+  .check-food.on{background:var(--orange);border-color:var(--orange)}
+  .check-work.on{background:var(--blue);border-color:var(--blue)}
+  .checkmark{display:none}
+  .check-btn.on .checkmark{display:block}
+
+  .item-body{flex:1;min-width:0}
+  .item-label{font-size:14px;color:var(--text);line-height:1.3}
+  .item-note{font-size:11px;color:var(--text3);margin-top:2px}
+  .item-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+  .xp-pill{font-size:11px;font-weight:600;color:var(--purple);background:var(--purple-dim);padding:2px 8px;border-radius:99px}
+  .day-chips{display:flex;gap:2px}
+  .day-chip{font-size:10px;padding:2px 4px;border-radius:4px;font-weight:600}
+  .day-on-health{background:var(--green-dim);color:var(--green)}
+  .day-on-habits{background:var(--purple-dim);color:var(--purple)}
+  .day-on-food{background:var(--orange-dim);color:var(--orange)}
+  .day-on-work{background:var(--blue-dim);color:var(--blue)}
+  .day-off{background:rgba(255,255,255,0.04);color:var(--text3)}
+  .del-btn{background:transparent;border:none;cursor:pointer;color:var(--text3);font-size:16px;padding:2px 0 2px 4px;opacity:0}
+  .item:active .del-btn{opacity:1}
+
+  /* FOOD COUNTER CONTROL */
+  .counter-item{align-items:flex-start}
+  .counter-item.fail{border-color:rgba(255,92,92,0.3);background:rgba(255,92,92,0.06)}
+  .counter-control{display:flex;gap:4px;flex-shrink:0}
+  .counter-btn{min-width:30px;height:30px;padding:0 8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);font-size:12px;font-weight:700;color:var(--text2);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center}
+  .counter-btn.active-0{background:var(--green);border-color:var(--green);color:#fff}
+  .counter-btn.active-1{background:var(--orange);border-color:var(--orange);color:#fff}
+  .counter-btn.active-2{background:var(--red);border-color:var(--red);color:#fff}
+  .counter-sub{font-size:10px;color:var(--text3);text-align:center;margin-top:2px}
+  .fail-tag{font-size:10px;font-weight:700;color:var(--red);background:var(--red-dim);padding:2px 7px;border-radius:99px;margin-top:4px;display:inline-block}
+
+  /* WORKOUT TAB */
+  .wo-block{margin:0 16px 18px}
+  .wo-block-title{font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px}
+  .wo-block-sub{font-size:11px;color:var(--text3);margin-bottom:10px}
+  .wo-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px}
+  .wo-name{font-size:14px;font-weight:600;color:var(--text)}
+  .wo-target{font-size:11px;color:var(--text3);margin-top:2px}
+  .wo-last{font-size:12px;color:var(--text2);margin-top:8px}
+  .wo-last b{color:var(--blue)}
+  .wo-rec{font-size:12px;margin-top:6px;padding:8px 10px;border-radius:8px;line-height:1.4}
+  .wo-rec.up{background:var(--green-dim);color:var(--green)}
+  .wo-rec.hold{background:var(--blue-dim);color:var(--blue)}
+  .wo-rec.new{background:rgba(255,255,255,0.04);color:var(--text3)}
+  .wo-inputs{display:flex;gap:8px;margin-top:10px;align-items:center}
+  .wo-inputs input{width:80px;font-size:14px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit;text-align:center}
+  .wo-inputs input::placeholder{color:var(--text3);font-size:12px}
+  .wo-inputs .x{color:var(--text3);font-size:13px}
+  .wo-save{font-size:12px;font-weight:600;padding:8px 14px;border-radius:8px;border:1px solid rgba(29,184,122,0.4);background:var(--green-dim);color:var(--green);cursor:pointer;font-family:inherit}
+  .wo-save.saved{background:var(--green);color:#fff}
+  .wo-intro{margin:0 16px 16px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:12px;color:var(--text2);line-height:1.5}
+  .wo-name{cursor:pointer}
+  .wo-name .chev{font-size:10px;color:var(--text3);margin-left:6px}
+  .pb-badge{font-size:11px;font-weight:700;color:#FFD34D;background:rgba(255,211,77,0.12);border:1px solid rgba(255,211,77,0.3);padding:2px 8px;border-radius:99px;margin-left:8px}
+  .wo-trend{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+  .wo-trend-title{font-size:11px;color:var(--text3);margin-bottom:8px;font-weight:600}
+  .wo-trend-chart{display:flex;gap:4px;align-items:flex-end;height:70px}
+  .wo-trend-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;height:100%}
+  .wo-trend-bar{width:100%;border-radius:4px 4px 0 0;background:var(--blue);min-height:3px}
+  .wo-trend-bar.pb{background:#FFD34D}
+  .wo-trend-bar.empty{background:var(--border)}
+  .wo-trend-val{font-size:9px;color:var(--text2);font-weight:600}
+  .wo-trend-lbl{font-size:9px;color:var(--text3)}
+
+  /* BACKUP */
+  .backup-row{display:flex;gap:8px;margin:24px 16px 8px}
+  .backup-btn{flex:1;padding:10px;font-size:13px;font-weight:600;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;font-family:inherit}
+  .backup-note{margin:0 16px 16px;font-size:11px;color:var(--text3);text-align:center}
+
+  /* FREEZE MODE */
+  .freeze-row{margin:0 16px 16px}
+  .freeze-btn{width:100%;padding:10px;font-size:13px;font-weight:600;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;font-family:inherit}
+  .freeze-active{padding:12px 14px;background:rgba(74,158,255,0.1);border:1px solid rgba(74,158,255,0.3);border-radius:var(--radius-sm);font-size:13px;color:var(--blue);text-align:center;cursor:pointer}
+  .freeze-options{display:flex;gap:8px;margin-top:8px}
+  .freeze-opt{flex:1;padding:10px;font-size:13px;font-weight:600;border-radius:var(--radius-sm);border:1px solid rgba(74,158,255,0.3);background:var(--blue-dim);color:var(--blue);cursor:pointer;font-family:inherit}
+  .freeze-cancel{flex:1;padding:10px;font-size:13px;border-radius:var(--radius-sm);border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;font-family:inherit}
+
+  .add-area{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin:0 16px 16px}
+  .add-title{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px}
+  .add-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  .add-row input{flex:1;min-width:140px;font-size:14px;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit}
+  .add-row input::placeholder{color:var(--text3)}
+  .add-row select{font-size:13px;padding:9px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit}
+  .day-toggle-row{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+  .day-lbl{font-size:11px;color:var(--text3);margin-right:2px}
+  .day-tog{width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);font-size:10px;font-weight:700;color:var(--text3);cursor:pointer;font-family:inherit}
+  .day-tog.on{background:var(--green);border-color:var(--green);color:#fff}
+  .add-btn{width:100%;padding:10px;font-size:14px;font-weight:600;border-radius:var(--radius-sm);border:1px solid rgba(155,143,255,0.3);background:var(--purple-dim);color:var(--purple);cursor:pointer;font-family:inherit}
+
+  .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--surface2);border:1px solid rgba(155,143,255,0.3);color:var(--text);padding:10px 20px;border-radius:99px;font-size:13px;font-weight:600;opacity:0;transition:all 0.3s;pointer-events:none;white-space:nowrap;z-index:999}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* REPORTS TAB */
+  .report-card{margin:0 16px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+  .report-card.hero{background:linear-gradient(135deg,#0e1a2e 0%,#1a1030 100%);border-color:rgba(74,158,255,0.2)}
+  .report-toggle{display:flex;gap:4px;margin:0 16px 16px;background:var(--surface);padding:4px;border-radius:var(--radius-sm)}
+  .report-toggle button{flex:1;padding:8px;border:none;background:transparent;font-size:13px;font-weight:500;color:var(--text2);border-radius:6px;cursor:pointer;font-family:inherit}
+  .report-toggle button.active{background:var(--surface2);color:var(--text);font-weight:600}
+  .report-title{font-size:13px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px}
+  .report-big-num{font-size:42px;font-weight:700;line-height:1}
+  .report-big-lbl{font-size:13px;color:var(--text2);margin-top:4px}
+  .report-compare{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:13px}
+  .report-compare.up{color:var(--green)}
+  .report-compare.down{color:var(--red)}
+  .report-compare.flat{color:var(--text3)}
+  .rank-pill{display:inline-block;margin-top:10px;font-size:12px;font-weight:600;background:var(--blue-dim);color:var(--blue);padding:4px 10px;border-radius:99px}
+  .cat-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .cat-bar-label{font-size:13px;color:var(--text2);width:88px;flex-shrink:0}
+  .cat-bar-track{flex:1;height:8px;background:var(--border);border-radius:99px;overflow:hidden}
+  .cat-bar-fill{height:8px;border-radius:99px}
+  .cat-bar-pct{font-size:13px;font-weight:600;width:40px;text-align:right;flex-shrink:0}
+  .trend-row{display:flex;gap:4px;align-items:flex-end;height:60px;margin-top:8px}
+  .trend-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}
+  .trend-bar{width:100%;border-radius:4px 4px 0 0;min-height:3px}
+  .trend-lbl{font-size:10px;color:var(--text3)}
+  .quote-card{margin:0 16px 16px;padding:16px;background:var(--purple-dim);border:1px solid rgba(155,143,255,0.25);border-radius:var(--radius);font-size:14px;color:var(--text);line-height:1.5;font-style:italic}
+  .empty-report{margin:0 16px;text-align:center;padding:30px 20px;color:var(--text3);font-size:13px}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<div class="app-header">
+  <h1>My Tracker</h1>
+  <div class="date" id="date-str"></div>
+</div>
+
+<div class="date-nav">
+  <button class="date-nav-btn" id="prev-btn" onclick="shiftDay(-1)">‹</button>
+  <div class="date-nav-center">
+    <div class="date-nav-label" id="nav-label"></div>
+    <div id="nav-sub"></div>
+  </div>
+  <button class="date-nav-btn" id="next-btn" onclick="shiftDay(1)" disabled>›</button>
+</div>
+
+<div class="past-banner" id="past-banner">📅 Viewing a past day — you can still tick things off retroactively.</div>
+
+<div class="xp-card">
+  <div class="xp-top">
+    <div class="level-row">
+      <div class="level-badge" id="lvl-num">1</div>
+      <div>
+        <div class="level-name" id="lvl-name">Rookie</div>
+        <div class="level-sub" id="lvl-sub">Just getting started</div>
+      </div>
+    </div>
+    <div class="xp-right">
+      <div class="xp-total" id="xp-total">0 XP</div>
+      <div class="xp-label">total earned</div>
+    </div>
+  </div>
+  <div class="xp-bar-track"><div class="xp-bar-fill" id="xp-fill" style="width:0%"></div></div>
+  <div class="xp-bar-meta"><span id="xp-cur">0 XP</span><span id="xp-next">100 XP to Contender</span></div>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card stat-streak"><div class="stat-num" id="s-streak">0</div><div class="stat-lbl">🔥 streak</div></div>
+  <div class="stat-card stat-today"><div class="stat-num" id="s-today">0/0</div><div class="stat-lbl">today</div></div>
+  <div class="stat-card stat-weekly"><div class="stat-num" id="s-week">0/0</div><div class="stat-lbl">weekly</div></div>
+  <div class="stat-card stat-wxp"><div class="stat-num" id="s-wxp">0</div><div class="stat-lbl">week XP</div></div>
+</div>
+<div class="streak-note">🔥 Daily streak holds if you miss no more than 1 task that day</div>
+<div class="week-streak-card">
+  <div class="week-streak-left">
+    <span class="week-streak-icon">📅</span>
+    <div>
+      <div class="week-streak-lbl">Weekly streak</div>
+      <div class="week-streak-sub">80%+ of all weekly tasks completed</div>
+    </div>
+  </div>
+  <div class="week-streak-num" id="week-streak-num">0</div>
+</div>
+
+<div class="freeze-row" id="freeze-row"></div>
+
+<div class="week-row" id="week-row"></div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('daily')">Daily</button>
+  <button class="tab" onclick="switchTab('weekly')">Weekly</button>
+  <button class="tab" onclick="switchTab('workout')">💪 Workout</button>
+  <button class="tab" onclick="switchTab('reports')">📊 Reports</button>
+</div>
+
+<div id="daily-view"></div>
+<div id="weekly-view" style="display:none"></div>
+<div id="workout-view" style="display:none"></div>
+<div id="reports-view" style="display:none"></div>
+
+<div class="backup-row">
+  <button class="backup-btn" onclick="exportData()">⬇️ Export backup</button>
+  <button class="backup-btn" onclick="document.getElementById('import-file').click()">⬆️ Import backup</button>
+  <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)">
+</div>
+<div class="backup-note">Backs up all your data — streaks, XP, check-offs, and workout history.</div>
+
+<script>
+const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const CAT={
+  health:{label:'Health',prog:'prog-health',check:'check-health',dayOn:'day-on-health',color:'var(--green)'},
+  habits:{label:'Habits',prog:'prog-habits',check:'check-habits',dayOn:'day-on-habits',color:'var(--purple)'},
+  food:{label:'Food & Treats',prog:'prog-food',check:'check-food',dayOn:'day-on-food',color:'var(--orange)'},
+  work:{label:'Work',prog:'prog-work',check:'check-work',dayOn:'day-on-work',color:'var(--blue)'},
+};
+const CAT_ORDER=['health','habits','food','work'];
+const XP_MAP={d1:30,d2:10,d3:10,d4:5,w1:25,w2:20,w3:15,w4:20,w5:20};
+const COUNTER_XP={0:30,1:15,2:-50}; // XP awarded based on count value (2+ all map to the "2" tier)
+const DEF_XP={daily:10,weekly:15};
+function getCounterXP(count){ const c=Math.min(count,2); return COUNTER_XP[c]; }
+function isCounterDone(count){ return count<=1; } // counts as "done" for streak/completion purposes
+function isCounterFail(count){ return count>=2; }
+const LEVELS=[
+  {min:0,name:'Rookie',sub:'Just getting started'},
+  {min:100,name:'Contender',sub:'Building momentum'},
+  {min:300,name:'Consistent',sub:'Habits are forming'},
+  {min:600,name:'Disciplined',sub:'This is becoming natural'},
+  {min:1000,name:'Dedicated',sub:'Serious commitment'},
+  {min:1500,name:'Elite',sub:'Top tier habits'},
+  {min:2200,name:'Champion',sub:'Unstoppable'},
+  {min:3000,name:'Legend',sub:'Absolute machine 🏆'},
+];
+const STREAK_MAX_MISSES=1; // daily streak holds if you miss no more than this many tasks
+const WEEK_STREAK_THRESHOLD=0.8; // weekly streak needs 80%+ of all weekly tasks (daily+weekly combined)
+
+const DEFAULTS={
+  daily:[
+    {id:'d1',label:'Gym session',note:'Mon, Tue & Fri only',cat:'health',days:[1,2,5],done:false},
+    {id:'d2',label:'Take creatine',note:'',cat:'health',days:[],done:false},
+    {id:'d3',label:'Take fish oil tablets',note:'',cat:'health',days:[],done:false},
+    {id:'d4',label:'Make the bed',note:'',cat:'habits',days:[],done:false},
+  ],
+  weekly:[
+    {id:'w1',label:'5km run or Wednesday cardio class',note:'Once a week — sub one for the other',cat:'health',days:[],done:false},
+    {id:'w2',label:'At-home workout',note:'Arms, shoulders or core',cat:'health',days:[],done:false},
+    {id:'w3',label:'Do the washing',note:"Friday or Saturday so it's dry for Monday",cat:'habits',days:[],done:false},
+    {id:'w4',label:'Ring a family member',note:'',cat:'habits',days:[],done:false},
+    {id:'w5',label:'20 mins learning / research',note:'E.g. politics, history, construction…',cat:'habits',days:[],done:false},
+    {id:'w6',label:'Work-hours takeaway',note:'0 or 1 = on track · 2+ = over the limit',cat:'food',days:[],counter:true,count:0},
+    {id:'w7',label:'Dinner takeaway with Claire',note:'0 or 1 = on track · 2+ = over the limit',cat:'food',days:[],counter:true,count:0},
+    {id:'w8',label:'Connoisseur ice cream',note:'0 or 1 = on track · 2+ = over the limit',cat:'food',days:[],counter:true,count:0},
+  ]
+};
+
+let viewOffset=0, newDays=[], toastTimer=null, currentTab='daily', reportMode='weekly';
+let XPS={streak:0,lastDate:null,totalXP:0,weekXP:0,weekKey:null,weekStreak:0,lastCompletedWeekKey:null,freezeFrom:null,freezeTo:null};
+
+/* ---- FREEZE HELPERS ---- */
+function parseKey(k){ const p=k.split('-'); return new Date(+p[0],+p[1]-1,+p[2]); }
+function keyOf(d){ return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
+function freezeActive(){
+  if(!XPS.freezeTo)return false;
+  const today=new Date(); today.setHours(0,0,0,0);
+  return today<=parseKey(XPS.freezeTo);
+}
+function dateFrozen(d){
+  if(!XPS.freezeFrom||!XPS.freezeTo)return false;
+  const t=new Date(d); t.setHours(0,0,0,0);
+  return t>=parseKey(XPS.freezeFrom)&&t<=parseKey(XPS.freezeTo);
+}
+// true if every day strictly between lastDateKey and today is covered by the freeze
+function gapBridgedByFreeze(lastDateKey){
+  if(!lastDateKey||!XPS.freezeFrom)return false;
+  const start=parseKey(lastDateKey);
+  const today=new Date(); today.setHours(0,0,0,0);
+  const d=new Date(start); d.setDate(d.getDate()+1);
+  while(d<today){
+    if(!dateFrozen(d))return false;
+    d.setDate(d.getDate()+1);
+  }
+  return true;
+}
+let freezePickerOpen=false;
+function toggleFreezePicker(){ freezePickerOpen=!freezePickerOpen; renderFreeze(); }
+function startFreeze(days){
+  const from=new Date(); from.setHours(0,0,0,0);
+  const to=new Date(from); to.setDate(to.getDate()+days-1);
+  XPS.freezeFrom=keyOf(from);
+  XPS.freezeTo=keyOf(to);
+  freezePickerOpen=false;
+  saveXPS();
+  toast(`⏸ Streaks frozen for ${days} day${days>1?'s':''}`);
+  renderFreeze();
+}
+function endFreeze(){
+  // keep the record (needed for gap bridging) but end it as of yesterday
+  const y=new Date(); y.setDate(y.getDate()-1);
+  if(XPS.freezeFrom&&parseKey(XPS.freezeFrom)>y){ XPS.freezeFrom=null; XPS.freezeTo=null; }
+  else XPS.freezeTo=keyOf(y);
+  saveXPS();
+  toast('▶️ Streaks resumed');
+  renderFreeze();
+}
+function renderFreeze(){
+  const el=document.getElementById('freeze-row');
+  if(!el)return;
+  if(freezeActive()){
+    const to=parseKey(XPS.freezeTo);
+    const label=to.toLocaleDateString('en-AU',{weekday:'short',day:'numeric',month:'short'});
+    el.innerHTML=`<div class="freeze-active" onclick="if(confirm('Resume streaks now?'))endFreeze()">⏸ Sick/holiday mode — streaks frozen until ${label}. Tap to resume early.</div>`;
+  } else if(freezePickerOpen){
+    el.innerHTML=`<button class="freeze-btn" onclick="toggleFreezePicker()">⏸ Sick / holiday mode</button>
+    <div class="freeze-options">
+      <button class="freeze-opt" onclick="startFreeze(3)">3 days</button>
+      <button class="freeze-opt" onclick="startFreeze(7)">7 days</button>
+      <button class="freeze-opt" onclick="startFreeze(14)">14 days</button>
+      <button class="freeze-cancel" onclick="toggleFreezePicker()">Cancel</button>
+    </div>`;
+  } else {
+    el.innerHTML=`<button class="freeze-btn" onclick="toggleFreezePicker()">⏸ Sick / holiday mode — pause streaks</button>`;
+  }
+}
+let viewDaily=[], viewWeekly=[];
+
+function dateForOffset(o){const d=new Date();d.setDate(d.getDate()+o);return d;}
+function keyForOffset(o){const d=dateForOffset(o);return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;}
+function todayKey(){return keyForOffset(0);}
+function mondayOfWeek(d){const day=d.getDay();const diff=d.getDate()-day+(day===0?-6:1);return new Date(new Date(d).setDate(diff));}
+function weekKeyFor(d){const m=mondayOfWeek(d);return `wk-${m.getFullYear()}-${m.getMonth()+1}-${m.getDate()}`;}
+function weekKey(){return weekKeyFor(new Date());}
+function monthKeyFor(d){return `${d.getFullYear()}-${d.getMonth()+1}`;}
+function dowForOffset(o){return dateForOffset(o).getDay();}
+function scheduled(item,offset){const d=dowForOffset(offset!==undefined?offset:viewOffset);return !item.days||item.days.length===0||item.days.includes(d);}
+function getXP(item){
+  if(item.counter) return getCounterXP(item.count||0);
+  return XP_MAP[item.id]||DEF_XP[item.id&&item.id[0]==='w'?'weekly':'daily'];
+}
+function getLevel(xp){let lv=LEVELS[0],idx=0;for(let i=0;i<LEVELS.length;i++){if(xp>=LEVELS[i].min){lv=LEVELS[i];idx=i;}}return {lv,idx};}
+
+function saveDay(offset,daily){localStorage.setItem('daily_'+keyForOffset(offset),JSON.stringify(daily));}
+function loadDay(offset){const k='daily_'+keyForOffset(offset);const d=localStorage.getItem(k);return d?JSON.parse(d):JSON.parse(JSON.stringify(DEFAULTS.daily));}
+function saveWeek(weekly){localStorage.setItem('weekly_'+weekKey(),JSON.stringify(weekly));}
+function loadWeek(){const w=localStorage.getItem('weekly_'+weekKey());return w?JSON.parse(w):JSON.parse(JSON.stringify(DEFAULTS.weekly));}
+function loadWeekFor(weekKeyStr){const w=localStorage.getItem('weekly_'+weekKeyStr);return w?JSON.parse(w):null;}
+function saveXPS(){localStorage.setItem('xpstate',JSON.stringify(XPS));}
+function loadXPS(){const x=localStorage.getItem('xpstate');if(x)XPS=JSON.parse(x);if(XPS.weekKey!==weekKey()){XPS.weekXP=0;XPS.weekKey=weekKey();}}
+
+// log of completed daily-task records, keyed by date, so we can compute history independent of "today's defaults"
+function dayCompletionPct(offset){
+  const items=loadDay(offset).filter(i=>scheduled(i,offset));
+  if(!items.length)return null;
+  return items.filter(i=>i.done).length/items.length;
+}
+
+function shiftDay(delta){
+  if(currentTab==='daily')saveDay(viewOffset,viewDaily); else saveWeek(viewWeekly);
+  viewOffset=Math.min(0,viewOffset+delta);
+  viewDaily=loadDay(viewOffset); viewWeekly=loadWeek();
+  render();
+}
+function jumpToDay(targetDow){
+  const today=new Date();let d=targetDow-today.getDay();if(d>0)d-=7;
+  if(currentTab==='daily')saveDay(viewOffset,viewDaily);
+  viewOffset=d; viewDaily=loadDay(viewOffset); render();
+}
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');if(toastTimer)clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2200);}
+
+function updateStreak(daily){
+  const tk=todayKey();
+  if(viewOffset!==0)return;
+  const ti=daily.filter(i=>scheduled(i,0));
+  if(!ti.length)return;
+  const missed=ti.filter(i=>!i.done).length;
+  if(missed<=STREAK_MAX_MISSES&&XPS.lastDate!==tk){
+    const y=new Date();y.setDate(y.getDate()-1);
+    const yk=`${y.getFullYear()}-${y.getMonth()+1}-${y.getDate()}`;
+    if(XPS.lastDate===yk||gapBridgedByFreeze(XPS.lastDate)){
+      XPS.streak=XPS.streak+1;
+    } else {
+      XPS.streak=1;
+    }
+    XPS.lastDate=tk;
+    if(XPS.streak%7===0){const b=50;XPS.totalXP+=b;XPS.weekXP+=b;setTimeout(()=>toast(`🔥 ${XPS.streak}-day streak! +${b} bonus XP!`),2400);}
+    else if(XPS.streak%3===0){const b=20;XPS.totalXP+=b;XPS.weekXP+=b;setTimeout(()=>toast(`🔥 ${XPS.streak}-day streak! +${b} bonus XP!`),2400);}
+    saveXPS();
+  }
+  updateWeekStreak();
+}
+
+function weekOverlapsFreeze(weekMonday){
+  if(!XPS.freezeFrom||!XPS.freezeTo)return false;
+  const weekEnd=new Date(weekMonday); weekEnd.setDate(weekEnd.getDate()+6);
+  return parseKey(XPS.freezeFrom)<=weekEnd&&parseKey(XPS.freezeTo)>=weekMonday;
+}
+
+function updateWeekStreak(){
+  const today=new Date();
+  const lastWeekRef=new Date(today); lastWeekRef.setDate(lastWeekRef.getDate()-7);
+  const lastWk=weekKeyFor(lastWeekRef);
+  if(XPS.lastCompletedWeekKey===lastWk) return;
+  const lastMonday=mondayOfWeek(lastWeekRef); lastMonday.setHours(0,0,0,0);
+  // If the week overlapped a freeze, skip it entirely: neither advance nor reset.
+  if(weekOverlapsFreeze(lastMonday)){
+    XPS.lastCompletedWeekKey=lastWk;
+    saveXPS();
+    return;
+  }
+  const stats=getWeekStats(-1);
+  if(stats.totalTasks===0) return;
+  if(stats.pct!==null && stats.pct/100>=WEEK_STREAK_THRESHOLD){
+    XPS.weekStreak+=1;
+  } else {
+    XPS.weekStreak=0;
+  }
+  XPS.lastCompletedWeekKey=lastWk;
+  saveXPS();
+}
+
+function toggle(list,id){
+  const arr=list==='daily'?viewDaily:viewWeekly;
+  const item=arr.find(i=>i.id===id);
+  if(!item)return;
+  if(list==='daily'&&!scheduled(item))return;
+  const was=item.done; item.done=!item.done;
+  const xp=getXP(item);
+  const prevLvl=getLevel(XPS.totalXP).idx;
+  if(!was){XPS.totalXP+=xp;XPS.weekXP+=xp;toast(`+${xp} XP`);}
+  else{XPS.totalXP=Math.max(0,XPS.totalXP-xp);XPS.weekXP=Math.max(0,XPS.weekXP-xp);}
+  const newLvl=getLevel(XPS.totalXP).idx;
+  if(newLvl>prevLvl)setTimeout(()=>toast(`⬆️ Level up! ${LEVELS[newLvl].name}!`),2400);
+  saveXPS();
+  if(list==='daily'){updateStreak(viewDaily);saveDay(viewOffset,viewDaily);} else saveWeek(viewWeekly);
+  render();
+}
+
+
+function del(list,id){
+  if(list==='daily'){viewDaily=viewDaily.filter(i=>i.id!==id);saveDay(viewOffset,viewDaily);}
+  else{viewWeekly=viewWeekly.filter(i=>i.id!==id);saveWeek(viewWeekly);}
+  render();
+}
+function toggleDay(d){const btn=document.getElementById('dt-'+d);if(newDays.includes(d)){newDays=newDays.filter(x=>x!==d);btn.classList.remove('on');}else{newDays.push(d);btn.classList.add('on');}}
+function addItem(list){
+  const inp=document.getElementById('ai-'+list);const sel=document.getElementById('as-'+list);
+  const label=inp.value.trim();if(!label)return;
+  const id=list[0]+(Date.now()%1e9);
+  const newItem={id,label,note:'',cat:sel.value,days:list==='daily'?[...newDays]:[],done:false};
+  if(list==='daily'){viewDaily.push(newItem);saveDay(viewOffset,viewDaily);}
+  else{viewWeekly.push(newItem);saveWeek(viewWeekly);}
+  inp.value='';newDays=[];document.querySelectorAll('.day-tog').forEach(b=>b.classList.remove('on'));
+  render();
+}
+
+function renderXP(){
+  const xp=XPS.totalXP;const {lv,idx}=getLevel(xp);const next=LEVELS[idx+1];
+  const lvXP=xp-lv.min;const range=next?next.min-lv.min:1;const pct=next?Math.min(100,Math.round(lvXP/range*100)):100;
+  document.getElementById('lvl-num').textContent=idx+1;
+  document.getElementById('lvl-name').textContent=lv.name;
+  document.getElementById('lvl-sub').textContent=lv.sub;
+  document.getElementById('xp-total').textContent=xp+' XP';
+  document.getElementById('xp-fill').style.width=pct+'%';
+  document.getElementById('xp-cur').textContent=lvXP+' / '+(next?range:'MAX')+' XP';
+  document.getElementById('xp-next').textContent=next?(next.min-xp)+' XP to '+next.name:'Max level!';
+}
+function renderDateNav(){
+  const d=dateForOffset(viewOffset);const isToday=viewOffset===0;
+  const label=isToday?'Today':viewOffset===-1?'Yesterday':d.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'short'});
+  document.getElementById('nav-label').textContent=label;
+  const sub=document.getElementById('nav-sub');
+  if(isToday){sub.innerHTML='<span class="today-badge">TODAY</span>';}
+  else{sub.textContent=d.toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long'});sub.style.color='var(--text3)';sub.style.fontSize='11px';}
+  document.getElementById('next-btn').disabled=viewOffset>=0;
+  document.getElementById('prev-btn').disabled=viewOffset<=-14;
+  document.getElementById('past-banner').style.display=isToday?'none':'block';
+  document.getElementById('date-str').textContent=new Date().toLocaleDateString('en-AU',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+function renderWeekChips(){
+  const todayDow=dateForOffset(0).getDay();const viewDow=dowForOffset(viewOffset);
+  let html='';
+  for(let i=1;i<=7;i++){
+    const d=i%7;const isToday=d===todayDow;const isSelected=d===viewDow&&viewOffset!==0;
+    const hasGym=viewDaily.some(it=>it.days&&it.days.includes(d));
+    let cls='week-day';
+    if(isToday&&viewOffset===0)cls+=' today'; else if(isSelected)cls+=' selected'; else if(isToday)cls+=' today'; else if(hasGym)cls+=' has-gym';
+    html+=`<div class="${cls}" onclick="jumpToDay(${d})">${DAYS[d]}</div>`;
+  }
+  document.getElementById('week-row').innerHTML=html;
+}
+function renderSection(list,cat){
+  const arr=list==='daily'?viewDaily:viewWeekly;
+  const items=arr.filter(i=>i.cat===cat);
+  if(!items.length)return '';
+  const m=CAT[cat];
+  const visible=list==='daily'?items.filter(i=>scheduled(i)):items;
+  const done=visible.filter(i=>i.counter?isCounterDone(i.count||0):i.done).length;
+  const total=visible.length;
+  const pct=total?Math.round(done/total*100):0;
+  let h=`<div class="section">
+    <div class="section-head"><span class="section-title">${m.label}</span><span class="section-prog">${done}/${total}</span></div>
+    <div class="prog-track"><div class="prog-fill ${m.prog}" style="width:${pct}%"></div></div>`;
+  items.forEach(item=>{
+    if(item.counter){
+      const count=item.count||0;
+      const isFail=isCounterFail(count);
+      const xp=getCounterXP(count);
+      h+=`<div class="item counter-item${isFail?' fail':''}">
+        <div class="item-body">
+          <div class="item-label">${item.label}</div>
+          ${item.note?`<div class="item-note">${item.note}</div>`:''}
+          ${isFail?`<span class="fail-tag">Over limit — counts as incomplete</span>`:''}
+        </div>
+        <div>
+          <div class="counter-control">
+            <button class="counter-btn${count===0?' active-0':''}" onclick="setCounter('${list}','${item.id}',0)">0</button>
+            <button class="counter-btn${count===1?' active-1':''}" onclick="setCounter('${list}','${item.id}',1)">1</button>
+            <button class="counter-btn${count>=2?' active-2':''}" onclick="setCounter('${list}','${item.id}',2)">2+</button>
+          </div>
+          <div class="counter-sub">${xp>=0?'+':''}${xp} XP</div>
+        </div>
+        <button class="del-btn" onclick="del('${list}','${item.id}')">×</button>
+      </div>`;
+      return;
+    }
+    const sched=list==='weekly'||scheduled(item);
+    const hasDays=item.days&&item.days.length>0;
+    const xp=getXP(item);
+    h+=`<div class="item${item.done&&sched?' done':''}${!sched?' not-today':''}">
+      <button class="check-btn ${m.check}${item.done?' on':''}" onclick="toggle('${list}','${item.id}')" ${!sched?'disabled':''}>
+        <span class="checkmark">✓</span>
+      </button>
+      <div class="item-body">
+        <div class="item-label">${item.label}</div>
+        ${item.note?`<div class="item-note">${item.note}</div>`:''}
+      </div>
+      <div class="item-right">
+        <span class="xp-pill">+${xp} XP</span>`;
+    if(hasDays){
+      h+=`<div class="day-chips">`;
+      [1,2,3,4,5,6,0].forEach(d=>{const on=item.days.includes(d);h+=`<span class="day-chip ${on?m.dayOn:'day-off'}">${DAYS[d]}</span>`;});
+      h+=`</div>`;
+    }
+    h+=`<button class="del-btn" onclick="del('${list}','${item.id}')">×</button></div></div>`;
+  });
+  return h+'</div>';
+}
+
+function setCounter(list,id,target){
+  const arr=list==='daily'?viewDaily:viewWeekly;
+  const item=arr.find(i=>i.id===id);
+  if(!item)return;
+  const oldCount=item.count||0;
+  const oldXP=getCounterXP(oldCount);
+  item.count=target;
+  const newXP=getCounterXP(target);
+  const deltaXp=newXP-oldXP;
+  XPS.totalXP=Math.max(0,XPS.totalXP+deltaXp);
+  XPS.weekXP=Math.max(0,XPS.weekXP+deltaXp);
+  if(target>=2) toast(`⚠️ Over the limit — ${newXP} XP`);
+  else toast(`${newXP>=0?'+':''}${newXP} XP`);
+  saveXPS();
+  if(list==='daily')saveDay(viewOffset,viewDaily); else saveWeek(viewWeekly);
+  render();
+}
+function renderAddArea(list){
+  if(viewOffset!==0)return `<div style="margin:0 16px;font-size:13px;color:var(--text3);padding:8px 0">Switch to today to add new tasks.</div>`;
+  const dayRow=list==='daily'?`
+    <div class="day-toggle-row"><span class="day-lbl">Specific days:</span>
+      ${[1,2,3,4,5,6,0].map(d=>`<button class="day-tog" id="dt-${d}" onclick="toggleDay(${d})">${DAYS[d]}</button>`).join('')}
+    </div>`:'';
+  return `<div class="add-area">
+    <div class="add-title">+ Add a task</div>
+    <div class="add-row">
+      <input id="ai-${list}" type="text" placeholder="Task name…" onkeydown="if(event.key==='Enter')addItem('${list}')">
+      <select id="as-${list}">
+        <option value="health">Health</option><option value="habits">Habits</option>
+        <option value="food">Food & Treats</option><option value="work">Work</option>
+      </select>
+    </div>
+    ${dayRow}
+    <button class="add-btn" onclick="addItem('${list}')">Add task</button>
+  </div>`;
+}
+
+/* ---------- WORKOUT TAB ---------- */
+/*
+ Progression types — each exercise gets rules matched to how that movement actually progresses:
+ - compound: bigger muscle groups, tolerate regular weight jumps. Hit top reps once -> add weight.
+ - iso_med: medium isolation (curls). Hit top reps once -> small weight jump.
+ - iso_small: small muscle isolation (lateral raises, kickbacks). Reps progress first;
+   only suggest weight after hitting top reps TWO weeks running. Form > load.
+ - heavy_simple: shrugs — short ROM, safe to load. Top reps once -> bigger jump ok.
+ - core_weighted: add reps first, then modest weight.
+ - core_reps: bodyweight core — reps/hold time only, never suggests weight.
+*/
+const EXERCISES=[
+  {id:'e1',block:'Block 1 — Arm Thickness (4 rounds, rest 60-75s)',name:'Close-grip floor press',target:'8-10 reps',repLo:8,repHi:10,type:'compound',inc:2.5,note:'Elbows tucked, triceps mass builder'},
+  {id:'e2',block:'Block 1 — Arm Thickness (4 rounds, rest 60-75s)',name:'Hammer curls',target:'10-12 reps each',repLo:10,repHi:12,type:'iso_med',inc:2,note:'Brachialis = arm thickness'},
+  {id:'e3',block:'Block 2 — Arm Finisher (3 rounds, rest 45-60s)',name:'Tricep kickbacks',target:'12-15 reps each',repLo:12,repHi:15,type:'iso_small',inc:2.5,note:'Strict, squeeze at top'},
+  {id:'e4',block:'Block 2 — Arm Finisher (3 rounds, rest 45-60s)',name:'Zottman curls',target:'8-10 reps',repLo:8,repHi:10,type:'iso_med',inc:2,note:'Slow reverse-grip lowering'},
+  {id:'e5',block:'Block 3 — Core Circuit (3 rounds)',name:'Weighted crunches',target:'15 reps',repLo:12,repHi:15,type:'core_weighted',inc:2.5,note:'Dumbbell on chest'},
+  {id:'e6',block:'Block 3 — Core Circuit (3 rounds)',name:'Russian twists',target:'20 total',repLo:16,repHi:20,type:'core_weighted',inc:2.5,note:'Controlled, not rushed'},
+  {id:'e7',block:'Block 3 — Core Circuit (3 rounds)',name:'Side plank hip dips',target:'10 each side',repLo:8,repHi:12,type:'core_reps',inc:0,note:'Obliques'},
+  {id:'e8',block:'Block 3 — Core Circuit (3 rounds)',name:'Lying leg raises',target:'12-15 reps',repLo:12,repHi:15,type:'core_reps',inc:0,note:'Lower abs, slow negatives'},
+  {id:'e9',block:'Block 4 — Shoulder Accessories (2 rounds)',name:'Dumbbell shrugs',target:'12-15 reps',repLo:12,repHi:15,type:'heavy_simple',inc:2.5,note:'Go heavy, traps can take it'},
+  {id:'e10',block:'Block 4 — Shoulder Accessories (2 rounds)',name:'Lateral raises',target:'12-15 reps',repLo:12,repHi:15,type:'iso_small',inc:2.5,note:'No swinging — small muscle, slow progression'},
+];
+
+function woKeyFor(offsetWeeks){
+  const ref=new Date(); ref.setDate(ref.getDate()+offsetWeeks*7);
+  return 'workout_'+weekKeyFor(ref);
+}
+function loadWO(offsetWeeks){
+  const raw=localStorage.getItem(woKeyFor(offsetWeeks));
+  return raw?JSON.parse(raw):{};
+}
+function saveWO(data){
+  localStorage.setItem(woKeyFor(0),JSON.stringify(data));
+}
+
+function woRecommendation(ex){
+  const last=loadWO(-1)[ex.id];
+  const prev=loadWO(-2)[ex.id];
+  if(!last||last.weight===undefined||last.reps===undefined){
+    return {cls:'new',text:'No history yet — log this week to start building your baseline.'};
+  }
+  const w=last.weight, r=last.reps;
+  const hitTop=r>=ex.repHi;
+  const belowRange=r<ex.repLo;
+
+  if(ex.type==='core_reps'){
+    if(hitTop) return {cls:'up',text:`Last week: ${r} reps. You topped the range — add 1-2 reps or slow the tempo right down this week.`};
+    return {cls:'hold',text:`Last week: ${r} reps. Build toward ${ex.repHi} with clean form before adding reps.`};
+  }
+
+  if(belowRange){
+    return {cls:'hold',text:`Last week: ${w}kg × ${r}. Below the ${ex.repLo}-${ex.repHi} range — stay at ${w}kg and own the reps first.`};
+  }
+
+  if(ex.type==='compound'||ex.type==='heavy_simple'){
+    if(hitTop) return {cls:'up',text:`Last week: ${w}kg × ${r}. Top of range hit — go to ${(w+ex.inc)}kg this week. This lift can handle regular jumps.`};
+    return {cls:'hold',text:`Last week: ${w}kg × ${r}. Stay at ${w}kg and push for ${ex.repHi} reps before adding weight.`};
+  }
+
+  if(ex.type==='iso_med'){
+    if(hitTop) return {cls:'up',text:`Last week: ${w}kg × ${r}. Range topped — try ${(w+ex.inc)}kg, but drop back if form breaks past rep ${ex.repLo}.`};
+    return {cls:'hold',text:`Last week: ${w}kg × ${r}. Add a rep or two at ${w}kg first — curls reward patience over load.`};
+  }
+
+  if(ex.type==='iso_small'){
+    const prevHitTop=prev&&prev.reps>=ex.repHi&&prev.weight===w;
+    if(hitTop&&prevHitTop) return {cls:'up',text:`${w}kg × ${ex.repHi}+ two weeks running — earned it. Try ${(w+ex.inc)}kg. That's a big % jump for a small muscle, so expect reps to drop to ~${ex.repLo} or below — that's fine, build back up.`};
+    if(hitTop) return {cls:'hold',text:`Last week: ${w}kg × ${r}. Top of range once — repeat it next session to confirm, THEN we add weight. Small muscles progress slow.`};
+    return {cls:'hold',text:`Last week: ${w}kg × ${r}. Keep at ${w}kg, chase ${ex.repHi} clean reps. No swinging.`};
+  }
+
+  if(ex.type==='core_weighted'){
+    if(hitTop) return {cls:'up',text:`Last week: ${w}kg × ${r}. Solid — add 1-2 reps this week, or +${ex.inc}kg if reps feel easy.`};
+    return {cls:'hold',text:`Last week: ${w}kg × ${r}. Reps before load on core work — aim ${ex.repHi}.`};
+  }
+  return {cls:'hold',text:`Last week: ${w}kg × ${r}.`};
+}
+
+function woInput(exId,field,value){
+  const data=loadWO(0);
+  if(!data[exId])data[exId]={};
+  data[exId][field]=parseFloat(value)||0;
+  saveWO(data);
+}
+
+// metric used for PBs & trends: weight for loaded moves, reps for bodyweight core
+function woMetric(ex,entry){
+  if(!entry)return null;
+  return ex.type==='core_reps'?(entry.reps||null):(entry.weight||null);
+}
+
+// best metric across all PAST weeks (excludes current week)
+function woAllTimeBest(ex){
+  let best=null;
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    if(!key||!key.startsWith('workout_'))continue;
+    if(key===woKeyFor(0))continue; // exclude current week
+    try{
+      const data=JSON.parse(localStorage.getItem(key));
+      const m=woMetric(ex,data[ex.id]);
+      if(m!==null&&(best===null||m>best))best=m;
+    }catch(e){}
+  }
+  return best;
+}
+
+function woIsPB(ex){
+  const cur=loadWO(0)[ex.id];
+  const m=woMetric(ex,cur);
+  if(m===null||!cur||!cur.logged)return false;
+  const best=woAllTimeBest(ex);
+  return best!==null?m>best:false; // first-ever week isn't a "PB", it's a baseline
+}
+
+let woExpanded={};
+function woToggleTrend(exId){
+  woExpanded[exId]=!woExpanded[exId];
+  renderWorkout();
+}
+
+function woTrendHTML(ex){
+  const points=[];
+  for(let o=-7;o<=0;o++){
+    const entry=loadWO(o)[ex.id];
+    points.push({offset:o,metric:woMetric(ex,entry)});
+  }
+  const vals=points.map(p=>p.metric).filter(v=>v!==null);
+  if(!vals.length)return `<div class="wo-trend"><div class="wo-trend-title">8-week trend</div><div style="font-size:11px;color:var(--text3)">No logged data yet — history builds as you log each week.</div></div>`;
+  const max=Math.max(...vals);
+  const unit=ex.type==='core_reps'?' reps':'kg';
+  let html=`<div class="wo-trend"><div class="wo-trend-title">8-week trend (${ex.type==='core_reps'?'reps':'weight'})</div><div class="wo-trend-chart">`;
+  points.forEach(p=>{
+    const lbl=p.offset===0?'Now':Math.abs(p.offset)+'w';
+    if(p.metric===null){
+      html+=`<div class="wo-trend-col"><div class="wo-trend-bar empty" style="height:3px"></div><div class="wo-trend-lbl">${lbl}</div></div>`;
+    }else{
+      const h=Math.max(6,Math.round(p.metric/max*48));
+      const isPeak=p.metric===max;
+      html+=`<div class="wo-trend-col"><div class="wo-trend-val">${p.metric}</div><div class="wo-trend-bar${isPeak?' pb':''}" style="height:${h}px"></div><div class="wo-trend-lbl">${lbl}</div></div>`;
+    }
+  });
+  html+=`</div></div>`;
+  return html;
+}
+
+function woCheckAutoComplete(){
+  const data=loadWO(0);
+  const allLogged=EXERCISES.every(e=>data[e.id]&&data[e.id].logged);
+  if(!allLogged)return;
+  // always operate on the CURRENT week's weekly list, even if user is browsing a past day
+  const weekly=loadWeek();
+  const item=weekly.find(i=>i.id==='w2');
+  if(item&&!item.done){
+    item.done=true;
+    const xp=getXP(item);
+    XPS.totalXP+=xp;XPS.weekXP+=xp;
+    saveXPS();
+    localStorage.setItem('weekly_'+weekKey(),JSON.stringify(weekly));
+    viewWeekly=loadWeek(); // refresh in-memory copy
+    setTimeout(()=>toast(`🏋️ At-home workout complete — +${xp} XP`),1200);
+  }
+}
+
+function woMarkSaved(exId){
+  const data=loadWO(0);
+  const ex=EXERCISES.find(e=>e.id===exId);
+  const entry=data[exId];
+  const repsOnly=ex&&ex.type==='core_reps';
+  if(!entry||(repsOnly&&!entry.reps)||(!repsOnly&&!entry.weight&&!entry.reps)){toast('Enter your set first');return;}
+  entry.logged=true;
+  saveWO(data);
+  if(woIsPB(ex)){
+    const unit=repsOnly?' reps':'kg';
+    toast(`🏆 New personal best — ${woMetric(ex,entry)}${unit}!`);
+  } else {
+    toast('✅ Logged');
+  }
+  woCheckAutoComplete();
+  renderWorkout();
+}
+
+function renderWorkout(){
+  const cur=loadWO(0);
+  let html=`<div class="wo-intro">💪 <b>At-home session — Arms & Core focus (~45 min)</b><br>
+  Warm up 5 min first: arm circles, light curls & floor presses at 7.5kg, torso twists.<br>
+  All triceps work stays below shoulder height (mobility-safe). Log your best working set per exercise.</div>`;
+  let lastBlock='';
+  EXERCISES.forEach(ex=>{
+    if(ex.block!==lastBlock){
+      if(lastBlock!=='')html+=`</div>`;
+      html+=`<div class="wo-block"><div class="wo-block-title">${ex.block}</div>`;
+      lastBlock=ex.block;
+    }
+    const rec=woRecommendation(ex);
+    const entry=cur[ex.id]||{};
+    const logged=entry.logged;
+    const repsOnly=ex.type==='core_reps';
+    const isPB=woIsPB(ex);
+    const expanded=woExpanded[ex.id];
+    html+=`<div class="wo-card">
+      <div class="wo-name" onclick="woToggleTrend('${ex.id}')">${ex.name}${isPB?'<span class="pb-badge">🏆 PB</span>':''}<span class="chev">${expanded?'▲ hide trend':'▼ trend'}</span></div>
+      <div class="wo-target">Target: ${ex.target} · ${ex.note}</div>
+      <div class="wo-rec ${rec.cls}">${rec.text}</div>
+      <div class="wo-inputs">
+        ${repsOnly?'':`<input type="number" inputmode="decimal" placeholder="kg" value="${entry.weight!==undefined?entry.weight:''}" onchange="woInput('${ex.id}','weight',this.value)">
+        <span class="x">kg ×</span>`}
+        <input type="number" inputmode="numeric" placeholder="reps" value="${entry.reps!==undefined?entry.reps:''}" onchange="woInput('${ex.id}','reps',this.value)">
+        ${repsOnly?'<span class="x">reps</span>':''}
+        <button class="wo-save${logged?' saved':''}" onclick="woMarkSaved('${ex.id}')">${logged?'✓ Logged':'Log set'}</button>
+      </div>
+      ${expanded?woTrendHTML(ex):''}
+    </div>`;
+  });
+  html+=`</div>`;
+  document.getElementById('workout-view').innerHTML=html;
+}
+
+/* ---------- REPORTS ---------- */
+function getWeekStats(weekOffset){
+  // weekOffset 0 = this week, -1 = last week, etc.
+  const ref=new Date(); ref.setDate(ref.getDate()+weekOffset*7);
+  const wk=weekKeyFor(ref);
+  const weekly=loadWeekFor(wk);
+  // gather daily items across the 7 days of that week
+  const monday=mondayOfWeek(ref);
+  let dailyDone=0, dailyTotal=0;
+  const catTotals={health:{done:0,total:0},habits:{done:0,total:0},food:{done:0,total:0},work:{done:0,total:0}};
+  for(let i=0;i<7;i++){
+    const d=new Date(monday); d.setDate(d.getDate()+i);
+    const today=new Date(); today.setHours(0,0,0,0);
+    if(d>today) continue; // don't count future days
+    const dKey=`${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+    const stored=localStorage.getItem('daily_'+dKey);
+    if(!stored) continue;
+    const items=JSON.parse(stored);
+    const dow=d.getDay();
+    items.forEach(it=>{
+      const isSched=!it.days||it.days.length===0||it.days.includes(dow);
+      if(!isSched)return;
+      dailyTotal++; if(it.done)dailyDone++;
+      if(catTotals[it.cat]){catTotals[it.cat].total++; if(it.done)catTotals[it.cat].done++;}
+    });
+  }
+  let weeklyDone=0, weeklyTotal=0;
+  if(weekly){
+    weekly.forEach(it=>{
+      const isDone = it.counter ? isCounterDone(it.count||0) : it.done;
+      weeklyTotal++; if(isDone)weeklyDone++;
+      if(catTotals[it.cat]){catTotals[it.cat].total++; if(isDone)catTotals[it.cat].done++;}
+    });
+  }
+  const totalDone=dailyDone+weeklyDone, totalTasks=dailyTotal+weeklyTotal;
+  const pct=totalTasks?Math.round(totalDone/totalTasks*100):null;
+  return {pct, totalDone, totalTasks, catTotals, weekKey:wk};
+}
+
+function getMonthStats(monthOffset){
+  const ref=new Date(); ref.setMonth(ref.getMonth()+monthOffset);
+  const year=ref.getFullYear(), month=ref.getMonth();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  let done=0, total=0;
+  const catTotals={health:{done:0,total:0},habits:{done:0,total:0},food:{done:0,total:0},work:{done:0,total:0}};
+  const today=new Date(); today.setHours(0,0,0,0);
+  for(let day=1;day<=daysInMonth;day++){
+    const d=new Date(year,month,day);
+    if(d>today) continue;
+    const dKey=`${year}-${month+1}-${day}`;
+    const stored=localStorage.getItem('daily_'+dKey);
+    if(!stored) continue;
+    const items=JSON.parse(stored);
+    const dow=d.getDay();
+    items.forEach(it=>{
+      const isSched=!it.days||it.days.length===0||it.days.includes(dow);
+      if(!isSched)return;
+      total++; if(it.done)done++;
+      if(catTotals[it.cat]){catTotals[it.cat].total++; if(it.done)catTotals[it.cat].done++;}
+    });
+  }
+  // include weekly tasks that fall within this month (approx: check each week key starting in month)
+  for(let day=1;day<=daysInMonth;day+=7){
+    const d=new Date(year,month,day);
+    const wk=weekKeyFor(d);
+    const weekly=loadWeekFor(wk);
+    if(weekly){
+      weekly.forEach(it=>{
+        const isDone = it.counter ? isCounterDone(it.count||0) : it.done;
+        total++; if(isDone)done++;
+        if(catTotals[it.cat]){catTotals[it.cat].total++; if(isDone)catTotals[it.cat].done++;}
+      });
+    }
+  }
+  const pct=total?Math.round(done/total*100):null;
+  return {pct, done, total, catTotals};
+}
+
+function rankAmong(values, currentVal){
+  const valid=values.filter(v=>v!==null);
+  if(currentVal===null||!valid.length)return null;
+  const sorted=[...valid].sort((a,b)=>b-a);
+  const rank=sorted.indexOf(currentVal)+1;
+  return {rank, outOf:valid.length};
+}
+
+function motivationalMsg(pct, trendDelta){
+  if(pct===null) return "No data yet for this period — get ticking and check back soon!";
+  if(pct>=90) return "Exceptional. This is what discipline looks like when it's actually working.";
+  if(pct>=75) return trendDelta>0 ? "Strong week, and trending up. Keep stacking these." : "Solid, consistent effort — this is a good baseline to build from.";
+  if(pct>=50) return "A real week — some wins, some misses. That's normal. Look at which category slipped and adjust just one thing next week.";
+  if(pct>=25) return "A tougher stretch. Progress isn't a straight line — the goal is picking it back up, not being perfect.";
+  return "Rough patch. No judgement here — just notice what got in the way, and start fresh tomorrow.";
+}
+
+function renderTrendChart(weeksBack){
+  const stats=[]; for(let i=-(weeksBack-1);i<=0;i++) stats.push(getWeekStats(i));
+  const max=100;
+  let html='<div class="trend-row">';
+  stats.forEach((s,idx)=>{
+    const h=s.pct===null?3:Math.max(3,Math.round(s.pct/max*56));
+    const color=s.pct===null?'var(--text3)':s.pct>=75?'var(--green)':s.pct>=50?'var(--blue)':s.pct>=25?'var(--orange)':'var(--red)';
+    const label=idx===weeksBack-1?'This':idx===weeksBack-2?'Last':(weeksBack-1-idx)+'wk';
+    html+=`<div class="trend-bar-wrap"><div class="trend-bar" style="height:${h}px;background:${color}"></div><div class="trend-lbl">${label}</div></div>`;
+  });
+  html+='</div>';
+  return html;
+}
+
+function renderReports(){
+  if(reportMode==='weekly'){
+    const cur=getWeekStats(0);
+    const last=getWeekStats(-1);
+    const history=[]; for(let i=-7;i<=0;i++) history.push(getWeekStats(i).pct);
+    const rank=rankAmong(history, cur.pct);
+    const delta=(cur.pct!==null&&last.pct!==null)?cur.pct-last.pct:null;
+
+    let html=`<div class="report-card hero">
+      <div class="report-title">This Week</div>
+      <div class="report-big-num">${cur.pct!==null?cur.pct+'%':'—'}</div>
+      <div class="report-big-lbl">${cur.totalDone}/${cur.totalTasks} tasks completed</div>`;
+    if(delta!==null){
+      const dir=delta>0?'up':delta<0?'down':'flat';
+      const arrow=delta>0?'▲':delta<0?'▼':'→';
+      html+=`<div class="report-compare ${dir}">${arrow} ${Math.abs(delta)}% vs last week (${last.pct}%)</div>`;
+    }
+    if(rank)html+=`<div class="rank-pill">📈 Ranked #${rank.rank} of your last ${rank.outOf} weeks</div>`;
+    html+=`</div>`;
+
+    html+=`<div class="report-card"><div class="report-title">8-Week Trend</div>${renderTrendChart(8)}</div>`;
+
+    html+=`<div class="report-card"><div class="report-title">By Category</div>`;
+    CAT_ORDER.forEach(c=>{
+      const ct=cur.catTotals[c];
+      const pct=ct.total?Math.round(ct.done/ct.total*100):0;
+      html+=`<div class="cat-bar-row">
+        <div class="cat-bar-label">${CAT[c].label}</div>
+        <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${pct}%;background:${CAT[c].color}"></div></div>
+        <div class="cat-bar-pct">${ct.total?pct+'%':'—'}</div>
+      </div>`;
+    });
+    html+=`</div>`;
+
+    html+=`<div class="quote-card">💭 ${motivationalMsg(cur.pct, delta)}</div>`;
+    document.getElementById('reports-view').innerHTML=html;
+
+  } else {
+    const cur=getMonthStats(0);
+    const last=getMonthStats(-1);
+    const history=[]; for(let i=-5;i<=0;i++) history.push(getMonthStats(i).pct);
+    const rank=rankAmong(history, cur.pct);
+    const delta=(cur.pct!==null&&last.pct!==null)?cur.pct-last.pct:null;
+    const monthName=new Date().toLocaleDateString('en-AU',{month:'long',year:'numeric'});
+
+    let html=`<div class="report-card hero">
+      <div class="report-title">${monthName}</div>
+      <div class="report-big-num">${cur.pct!==null?cur.pct+'%':'—'}</div>
+      <div class="report-big-lbl">${cur.done}/${cur.total} tasks completed</div>`;
+    if(delta!==null){
+      const dir=delta>0?'up':delta<0?'down':'flat';
+      const arrow=delta>0?'▲':delta<0?'▼':'→';
+      html+=`<div class="report-compare ${dir}">${arrow} ${Math.abs(delta)}% vs last month (${last.pct}%)</div>`;
+    }
+    if(rank)html+=`<div class="rank-pill">📈 Ranked #${rank.rank} of your last ${rank.outOf} months</div>`;
+    html+=`</div>`;
+
+    html+=`<div class="report-card"><div class="report-title">By Category</div>`;
+    CAT_ORDER.forEach(c=>{
+      const ct=cur.catTotals[c];
+      const pct=ct.total?Math.round(ct.done/ct.total*100):0;
+      html+=`<div class="cat-bar-row">
+        <div class="cat-bar-label">${CAT[c].label}</div>
+        <div class="cat-bar-track"><div class="cat-bar-fill" style="width:${pct}%;background:${CAT[c].color}"></div></div>
+        <div class="cat-bar-pct">${ct.total?pct+'%':'—'}</div>
+      </div>`;
+    });
+    html+=`</div>`;
+
+    html+=`<div class="quote-card">💭 ${motivationalMsg(cur.pct, delta)}</div>`;
+    document.getElementById('reports-view').innerHTML=html;
+  }
+}
+
+function setReportMode(mode){
+  reportMode=mode;
+  document.querySelectorAll('#report-toggle-row button').forEach(b=>b.classList.toggle('active', b.dataset.mode===mode));
+  renderReports();
+}
+
+function render(){
+  renderDateNav(); renderXP(); renderWeekChips(); renderFreeze();
+  const todayData=loadDay(0);
+  const todayDone=todayData.filter(i=>scheduled(i,0)&&i.done).length;
+  const todayTotal=todayData.filter(i=>scheduled(i,0)).length;
+  document.getElementById('s-streak').textContent=XPS.streak;
+  document.getElementById('s-today').textContent=todayDone+'/'+todayTotal;
+  document.getElementById('s-week').textContent=viewWeekly.filter(i=>i.counter?isCounterDone(i.count||0):i.done).length+'/'+viewWeekly.length;
+  document.getElementById('s-wxp').textContent=XPS.weekXP;
+  document.getElementById('week-streak-num').textContent=XPS.weekStreak;
+  ['daily','weekly'].forEach(list=>{
+    let html=CAT_ORDER.map(c=>renderSection(list,c)).join('');
+    html+=renderAddArea(list);
+    document.getElementById(list+'-view').innerHTML=html;
+  });
+  if(currentTab==='reports') renderReports();
+}
+
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.toggle('active', t.textContent.trim().toLowerCase().includes(tab)));
+  document.getElementById('daily-view').style.display=tab==='daily'?'block':'none';
+  document.getElementById('weekly-view').style.display=tab==='weekly'?'block':'none';
+  document.getElementById('workout-view').style.display=tab==='workout'?'block':'none';
+  document.getElementById('reports-view').style.display=tab==='reports'?'block':'none';
+  if(tab==='workout') renderWorkout();
+  if(tab==='reports'){
+    document.getElementById('reports-view').innerHTML=`<div class="report-toggle" id="report-toggle-row">
+      <button data-mode="weekly" class="active" onclick="setReportMode('weekly')">This Week</button>
+      <button data-mode="monthly" onclick="setReportMode('monthly')">This Month</button>
+    </div><div id="report-body"></div>`;
+    renderReports();
+  }
+}
+
+/* ---------- BACKUP / RESTORE ---------- */
+function exportData(){
+  const backup={};
+  for(let i=0;i<localStorage.length;i++){
+    const key=localStorage.key(i);
+    backup[key]=localStorage.getItem(key);
+  }
+  const payload=JSON.stringify({app:'my-tracker',version:1,exportedAt:new Date().toISOString(),data:backup},null,2);
+  const blob=new Blob([payload],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const d=new Date();
+  a.href=url;
+  a.download=`tracker-backup-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('⬇️ Backup downloaded');
+}
+
+function importData(input){
+  const file=input.files&&input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const parsed=JSON.parse(e.target.result);
+      if(!parsed||parsed.app!=='my-tracker'||!parsed.data){
+        toast('❌ Not a valid tracker backup file');
+        return;
+      }
+      if(!confirm('Restore this backup? It will overwrite your current data on this device.'))return;
+      Object.keys(parsed.data).forEach(key=>{
+        localStorage.setItem(key,parsed.data[key]);
+      });
+      // reload in-memory state from restored storage
+      loadXPS();
+      viewOffset=0;
+      viewDaily=loadDay(0);
+      viewWeekly=loadWeek();
+      render();
+      toast('✅ Backup restored');
+    }catch(err){
+      toast('❌ Could not read backup file');
+    }
+    input.value='';
+  };
+  reader.readAsText(file);
+}
+
+/* ---------- INIT ---------- */
+loadXPS();
+updateWeekStreak();
+viewDaily=loadDay(0);
+viewWeekly=loadWeek();
+render();
+</script>
+</body>
+</html>
